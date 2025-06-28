@@ -1,10 +1,11 @@
-package sypztep.peony.client.particle;
+package sypztep.peony.client.util;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
+import sypztep.peony.client.particle.TextParticle;
 
 import java.awt.*;
 

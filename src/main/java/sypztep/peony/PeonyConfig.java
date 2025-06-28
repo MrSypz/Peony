@@ -1,11 +1,10 @@
 package sypztep.peony;
 
-import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 import java.util.List;
 
-public class PeonyConfig {
+public final class PeonyConfig {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
     public static final ModConfigSpec.ConfigValue<List<? extends Integer>> XP_TABLE = BUILDER.comment("XP required per level (index = level - 1)") // https://irowiki.org/wiki/Base_EXP_Chart Rangarok xp table
@@ -46,6 +45,15 @@ public class PeonyConfig {
 
     public static final ModConfigSpec.ConfigValue<Boolean> PVP_DEATH_PENALTY_ENABLED = BUILDER.comment("Apply death penalty when killed by another player")
             .define("pvp_death_penalty_enabled", false);
+
+    public static final ModConfigSpec.BooleanValue SHOW_ATTACK_NOTIFY_PARTICLES = BUILDER
+            .comment("Show attack notification particles (crit, back attack, down attack, etc). Disabling may improve performance when there are many attacks per second.")
+            .define("showAttackNotifyParticles", true);
+
+    public static final ModConfigSpec.BooleanValue SHOW_MISS_PARTICLES = BUILDER
+            .comment("Show miss/missing particles. Disabling may improve performance when there are many attacks per second.")
+            .define("showMissParticles", true);
+
     // อันนี้ควรอยู่อันท้าย
     public static final ModConfigSpec SPEC = BUILDER.build();
 }

@@ -1,4 +1,4 @@
-package sypztep.peony.client.particle;
+package sypztep.peony.client.util;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
@@ -65,7 +65,7 @@ public final class TextParticleProvider {
         REGISTRY.put(this.flag, this);
     }
 
-    public static Builder builder(Component text) {
+    private static Builder builder(Component text) {
         return new Builder(text);
     }
 

@@ -11,7 +11,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.NotNull;
 import sypztep.peony.Peony;
-import sypztep.peony.client.particle.TextParticleProvider;
+import sypztep.peony.client.util.TextParticleProvider;
 
 public record AddTextParticlesPayloadS2C(int entityId, int selector) implements CustomPacketPayload {
 

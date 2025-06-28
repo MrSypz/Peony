@@ -21,7 +21,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import sypztep.peony.client.particle.ParticleUtil;
+import sypztep.peony.client.util.ParticleUtil;
+import sypztep.peony.client.util.TextParticleProvider;
 import sypztep.peony.client.payload.AddTextParticlesPayloadS2C;
 import sypztep.peony.common.init.ModAttributes;
 import sypztep.peony.common.init.ModParticle;
@@ -63,7 +64,10 @@ public abstract class LivingEntityMixin extends Entity implements CriticalOverha
         super(type, world);
     }
 
-    @Inject(method = "actuallyHurt", at = @At(value = "INVOKE", target = "Lnet/neoforged/neoforge/common/CommonHooks;onLivingDamagePre(Lnet/minecraft/world/entity/LivingEntity;Lnet/neoforged/neoforge/common/damagesource/DamageContainer;)F"))
+    @Inject(method = "actuallyHurt", at = @At(
+            value = "INVOKE",
+            target = "Lnet/neoforged/neoforge/common/CommonHooks;onLivingDamagePre(Lnet/minecraft/world/entity/LivingEntity;Lnet/neoforged/neoforge/common/damagesource/DamageContainer;)F"
+    ))
     private void monsterCrit(DamageSource source, float amount, CallbackInfo ci) {
         if (!this.level().isClientSide()) {
             Entity attacker = source.getEntity();
@@ -83,7 +87,11 @@ public abstract class LivingEntityMixin extends Entity implements CriticalOverha
         }
     }
 
-    @Inject(method = "hurt", at = @At(value = "INVOKE", target = "Ljava/util/Stack;push(Ljava/lang/Object;)Ljava/lang/Object;", shift = At.Shift.AFTER), cancellable = true)
+    @Inject(method = "hurt", at = @At(
+            value = "INVOKE",
+            target = "Ljava/util/Stack;push(Ljava/lang/Object;)Ljava/lang/Object;",
+            shift = At.Shift.AFTER
+    ), cancellable = true)
     private void handleDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         if (this.level().isClientSide()) return;
 
@@ -92,12 +100,14 @@ public abstract class LivingEntityMixin extends Entity implements CriticalOverha
 
         isHit = calculateHit(livingEntity);
         if (!isHit) {
-            sendMissingParticles(livingEntity);
+            if (livingEntity instanceof Player)
+                sendMissingParticles(livingEntity, ModParticle.MISSING);
+            else sendMissingParticles(livingEntity, ModParticle.MISSING_MONSTERS);
             playMissingSound();
             cir.setReturnValue(false);
         } else if (attacker instanceof CriticalOverhaul criticalAttacker && criticalAttacker.isCritical()) {
-            applyCriticalParticle(this);
             playCriticalSound(attacker);
+            applyCriticalParticle(this);
         }
     }
 
@@ -159,9 +169,13 @@ public abstract class LivingEntityMixin extends Entity implements CriticalOverha
     }
 
     @Unique
-    private void sendMissingParticles(LivingEntity attacker) {
-        PlayerLookup.tracking((ServerLevel) target.level(), target.chunkPosition()).forEach(foundPlayer -> AddTextParticlesPayloadS2C.send(foundPlayer, this.getId(), ModParticle.MISSING));
-        PlayerLookup.tracking((ServerLevel) attacker.level(), attacker.chunkPosition()).forEach(foundPlayer -> AddTextParticlesPayloadS2C.send(foundPlayer, this.getId(), ModParticle.MISSING));
+    private void sendMissingParticles(LivingEntity attacker, TextParticleProvider particle) {
+        PlayerLookup.tracking((ServerLevel) target.level(), target.chunkPosition()).forEach(
+                foundPlayer -> AddTextParticlesPayloadS2C.send(foundPlayer, this.getId(), particle)
+        );
+        PlayerLookup.tracking((ServerLevel) attacker.level(), attacker.chunkPosition()).forEach(
+                foundPlayer -> AddTextParticlesPayloadS2C.send(foundPlayer, this.getId(), particle)
+        );
     }
 
     @Unique
@@ -181,14 +195,39 @@ public abstract class LivingEntityMixin extends Entity implements CriticalOverha
         previousHealth = newHealth;
 
         if (healthDiff < 0) {
-            String damageText = String.format("%.2f", -healthDiff);
+            String damageText = formatNumber(-healthDiff);
             ParticleUtil.spawnTextParticle(entity, Component.literal("✖ " + damageText), new Color(0xD43333), -0.055f, -0.6f);
             return;
         }
 
         if (healthDiff > 0 && healthDiff != entity.getMaxHealth()) {
-            String healText = String.format("%.2f", healthDiff);
+            String healText = formatNumber(healthDiff);
             ParticleUtil.spawnTextParticle(entity, Component.literal("❤ " + healText), new Color(0x4DBD44), -0.055f, -0.6f);
+        }
+    }
+
+    public String formatNumber(double number) {
+        String suffix = "";
+        double displayNumber = number;
+
+        if (number >= 1_000_000_000) {
+            suffix = "B";
+            displayNumber = number / 1_000_000_000;
+        } else if (number >= 1_000_000) {
+            suffix = "M";
+            displayNumber = number / 1_000_000;
+        } else if (number >= 1_000) {
+            suffix = "K";
+            displayNumber = number / 1_000;
+        }
+
+        // Remove .00, keep up to 2 decimals if needed
+        if (displayNumber % 1 == 0) {
+            return String.format("%.0f%s", displayNumber, suffix);
+        } else if ((displayNumber * 10) % 1 == 0) {
+            return String.format("%.1f%s", displayNumber, suffix);
+        } else {
+            return String.format("%.2f%s", displayNumber, suffix);
         }
     }
 }
