@@ -1,0 +1,19 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "sypztep.peony.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "core.combat.hitevasion.PlayerEntityMixin",
+    "core.combat.hitevasion.LivingEntityMixin",
+    "core.registry.attribute.LivingEntityMixin"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}
