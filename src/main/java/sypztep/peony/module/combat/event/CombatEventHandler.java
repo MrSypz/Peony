@@ -11,7 +11,6 @@ public class CombatEventHandler {
     @SubscribeEvent()
     public static void onDealDamage(DealDamageEvent.Pre event) {
         LivingEntity target = event.getTarget();
-        LivingEntity attacker = event.getPlayerPatch().getOriginal();
         LivingDamageEvent.Pre neoforgeEvent = event.getNeoForgeEvent();
 
         float originalDamage = neoforgeEvent.getNewDamage();
