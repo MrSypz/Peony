@@ -38,7 +38,7 @@ public record AddTextParticlesPayloadS2C(int entityId, int selector) implements 
         context.enqueueWork(() -> {
             if (context.flow().isClientbound()) {
                 Entity entity = context.player().level().getEntity(payload.entityId());
-                if (entity != null)TextParticleProvider.handleParticle(entity, payload.selector());
+                if (entity != null) TextParticleProvider.handleParticle(entity, payload.selector());
             }
         });
     }

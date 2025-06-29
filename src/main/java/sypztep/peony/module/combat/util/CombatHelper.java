@@ -1,20 +1,17 @@
 package sypztep.peony.module.combat.util;
 
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
+import net.neoforged.neoforge.network.PacketDistributor;
 import sypztep.peony.client.util.TextParticleProvider;
 import sypztep.peony.client.payload.AddTextParticlesPayloadS2C;
 import sypztep.peony.common.init.ModAttributes;
 import sypztep.peony.common.init.ModParticle;
 
-import java.util.*;
 import java.util.function.BiPredicate;
-import java.util.stream.Collectors;
 
 public final class CombatHelper {
     @FunctionalInterface
@@ -41,9 +38,9 @@ public final class CombatHelper {
         }
 
         float applyIfValid(LivingEntity attacker, LivingEntity target, float damage) {
-            if (condition.test(attacker, target)) {
+            if (condition.test(attacker, target))
                 return effect.apply(attacker, target, damage);
-            }
+
             return damage;
         }
     }
@@ -52,9 +49,8 @@ public final class CombatHelper {
         if (!(source.getEntity() instanceof LivingEntity attacker)) return baseDamage;
 
         float modified = baseDamage;
-        for (CombatModifierType type : CombatModifierType.values()) {
+        for (CombatModifierType type : CombatModifierType.values())
             modified = type.applyIfValid(attacker, target, modified);
-        }
         return modified;
     }
 
@@ -68,17 +64,19 @@ public final class CombatHelper {
     // ==== Particle Sending ====
 
     private static void sendCombatParticles(LivingEntity target, LivingEntity attacker, TextParticleProvider particleText) {
-        if (!(attacker instanceof Player || target instanceof Player)) return;
-        getTrackingPlayers(target, attacker).forEach(player ->
-                AddTextParticlesPayloadS2C.send(player, target.getId(), particleText)
-        );
+        if (!(attacker instanceof ServerPlayer || target instanceof ServerPlayer)) return;
+
+        sendToTracking(target, particleText);
+        if (attacker != target)
+            sendToTracking(attacker, particleText);
     }
 
-    private static Set<ServerPlayer> getTrackingPlayers(LivingEntity... entities) {
-        return Arrays.stream(entities)
-                .filter(e -> e.level() instanceof ServerLevel)
-                .flatMap(e -> PlayerLookup.tracking((ServerLevel) e.level(), e.chunkPosition()).stream())
-                .collect(Collectors.toSet());
+
+    private static void sendToTracking(LivingEntity entity, TextParticleProvider particleText) {
+        if (entity.level() instanceof ServerLevel) {
+            AddTextParticlesPayloadS2C packet = new AddTextParticlesPayloadS2C(entity.getId(), particleText.getFlag());
+            PacketDistributor.sendToPlayersTrackingEntity(entity, packet);
+        }
     }
 
     private CombatHelper() {} // Utility class

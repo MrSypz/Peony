@@ -24,8 +24,6 @@ repositories {
 
 dependencies {
     implementation("curse.maven:epic-fight-mod-405076:${epicfight_version}")
-
-    implementation "org.sinytra.forgified-fabric-api:forgified-fabric-api:0.115.6+2.1.1+1.21.1"
 }
 
 

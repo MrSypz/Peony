@@ -1,7 +1,6 @@
 package sypztep.peony;
 
 import com.mojang.logging.LogUtils;
-import net.fabricmc.api.ModInitializer;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -13,7 +12,7 @@ import sypztep.peony.common.init.ModPayload;
 import sypztep.peony.module.combat.event.CombatEventHandler;
 
 @Mod(Peony.MODID)
-public class Peony implements ModInitializer {
+public class Peony {
     public static final String MODID = "peony";
     public static final Logger LOGGER = LogUtils.getLogger();
     public static ResourceLocation id (String name) {
@@ -26,10 +25,6 @@ public class Peony implements ModInitializer {
         modContainer.registerConfig(ModConfig.Type.COMMON, PeonyConfig.SPEC); // Register Config Screen
 
         NeoForge.EVENT_BUS.register(CombatEventHandler.class);
-    }
-
-    @Override
-    public void onInitialize() {
 
     }
 }

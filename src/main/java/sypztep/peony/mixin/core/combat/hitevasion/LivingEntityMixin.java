@@ -1,8 +1,6 @@
 package sypztep.peony.mixin.core.combat.hitevasion;
 
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.core.Holder;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -14,6 +12,7 @@ import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.common.damagesource.DamageContainer;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -21,8 +20,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import sypztep.peony.client.util.ParticleUtil;
-import sypztep.peony.client.util.TextParticleProvider;
 import sypztep.peony.client.payload.AddTextParticlesPayloadS2C;
 import sypztep.peony.common.init.ModAttributes;
 import sypztep.peony.common.init.ModParticle;
@@ -30,11 +27,10 @@ import sypztep.peony.module.combat.EntityCombatAttributes;
 import sypztep.peony.module.combat.interfaces.CriticalOverhaul;
 
 import javax.annotation.Nullable;
-import java.awt.*;
 import java.util.Random;
 import java.util.Stack;
 
-@Mixin(value = LivingEntity.class, priority = 6666)
+@Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin extends Entity implements CriticalOverhaul {
     @Shadow
     public abstract double getAttributeValue(Holder<Attribute> attribute);
@@ -100,9 +96,7 @@ public abstract class LivingEntityMixin extends Entity implements CriticalOverha
 
         isHit = calculateHit(livingEntity);
         if (!isHit) {
-            if (livingEntity instanceof Player)
-                sendMissingParticles(livingEntity, ModParticle.MISSING);
-            else sendMissingParticles(livingEntity, ModParticle.MISSING_MONSTERS);
+            sendMissingParticles(livingEntity);
             playMissingSound();
             cir.setReturnValue(false);
         } else if (attacker instanceof CriticalOverhaul criticalAttacker && criticalAttacker.isCritical()) {
@@ -158,7 +152,8 @@ public abstract class LivingEntityMixin extends Entity implements CriticalOverha
     @Unique
     public void applyCriticalParticle(Entity target) {
         if (!isHit) return;
-        PlayerLookup.tracking((ServerLevel) target.level(), target.chunkPosition()).forEach(foundPlayer -> AddTextParticlesPayloadS2C.send(foundPlayer, target.getId(), ModParticle.CRITICAL));
+        if (target.level() instanceof ServerLevel)
+            PacketDistributor.sendToPlayersTrackingEntity(target, new AddTextParticlesPayloadS2C(this.getId(), ModParticle.CRITICAL.getFlag()));
     }
 
     @Unique
@@ -169,65 +164,10 @@ public abstract class LivingEntityMixin extends Entity implements CriticalOverha
     }
 
     @Unique
-    private void sendMissingParticles(LivingEntity attacker, TextParticleProvider particle) {
-        PlayerLookup.tracking((ServerLevel) target.level(), target.chunkPosition()).forEach(
-                foundPlayer -> AddTextParticlesPayloadS2C.send(foundPlayer, this.getId(), particle)
-        );
-        PlayerLookup.tracking((ServerLevel) attacker.level(), attacker.chunkPosition()).forEach(
-                foundPlayer -> AddTextParticlesPayloadS2C.send(foundPlayer, this.getId(), particle)
-        );
-    }
-
-    @Unique
-    private float previousHealth;
-
-    @Inject(method = "tick()V", at = @At("TAIL"))
-    private void healing(CallbackInfo info) {
-        LivingEntity entity = (LivingEntity) (Object) this;
-
-        if (previousHealth == 0) {
-            previousHealth = entity.getHealth();
-            return;
-        }
-
-        float newHealth = entity.getHealth();
-        float healthDiff = newHealth - previousHealth;
-        previousHealth = newHealth;
-
-        if (healthDiff < 0) {
-            String damageText = formatNumber(-healthDiff);
-            ParticleUtil.spawnTextParticle(entity, Component.literal("✖ " + damageText), new Color(0xD43333), -0.055f, -0.6f);
-            return;
-        }
-
-        if (healthDiff > 0 && healthDiff != entity.getMaxHealth()) {
-            String healText = formatNumber(healthDiff);
-            ParticleUtil.spawnTextParticle(entity, Component.literal("❤ " + healText), new Color(0x4DBD44), -0.055f, -0.6f);
-        }
-    }
-
-    public String formatNumber(double number) {
-        String suffix = "";
-        double displayNumber = number;
-
-        if (number >= 1_000_000_000) {
-            suffix = "B";
-            displayNumber = number / 1_000_000_000;
-        } else if (number >= 1_000_000) {
-            suffix = "M";
-            displayNumber = number / 1_000_000;
-        } else if (number >= 1_000) {
-            suffix = "K";
-            displayNumber = number / 1_000;
-        }
-
-        // Remove .00, keep up to 2 decimals if needed
-        if (displayNumber % 1 == 0) {
-            return String.format("%.0f%s", displayNumber, suffix);
-        } else if ((displayNumber * 10) % 1 == 0) {
-            return String.format("%.1f%s", displayNumber, suffix);
-        } else {
-            return String.format("%.2f%s", displayNumber, suffix);
-        }
+    private void sendMissingParticles(LivingEntity attacker) {
+        if (target.level() instanceof ServerLevel)
+            PacketDistributor.sendToPlayersTrackingEntity(target, new AddTextParticlesPayloadS2C(this.getId(), ModParticle.MISSING.getFlag()));
+        if (attacker.level() instanceof ServerLevel)
+            PacketDistributor.sendToPlayersTrackingEntity(attacker, new AddTextParticlesPayloadS2C(this.getId(), ModParticle.MISSING_MONSTERS.getFlag()));
     }
 }
