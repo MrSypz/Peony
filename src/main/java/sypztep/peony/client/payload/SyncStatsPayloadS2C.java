@@ -28,7 +28,6 @@ public record SyncStatsPayloadS2C(
     public static final byte SYNC_XP = 1 << 1;         // 0010
     public static final byte SYNC_XP_TO_NEXT = 1 << 2; // 0100
     public static final byte SYNC_STAT_POINTS = 1 << 3; // 1000
-    public static final byte SYNC_ALL = SYNC_LEVEL | SYNC_XP | SYNC_XP_TO_NEXT | SYNC_STAT_POINTS;
 
     public static final StreamCodec<ByteBuf, SyncStatsPayloadS2C> STREAM_CODEC = StreamCodec.composite(
             ByteBufCodecs.VAR_INT, SyncStatsPayloadS2C::entityId,
