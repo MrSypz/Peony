@@ -43,6 +43,15 @@ public final class PeonyConfig {
             .comment("Show miss/missing particles. Disabling may improve performance when there are many attacks per second.")
             .define("showMissParticles", true);
 
+    // XP HUD Configuration
+    public static final ModConfigSpec.BooleanValue XP_HUD_DYNAMIC_MODE = BUILDER
+            .comment("Enable dynamic XP HUD mode (slides out when inactive, slides in on XP gain)")
+            .define("xpHudDynamicMode", false);
+
+    public static final ModConfigSpec.DoubleValue XP_HUD_AUTO_HIDE_DELAY = BUILDER
+            .comment("Auto-hide delay in seconds for dynamic XP HUD mode")
+            .defineInRange("xpHudAutoHideDelay", 3.0, 1.0, 10.0);
+
     // อันนี้ควรอยู่อันท้าย
     public static final ModConfigSpec SPEC = BUILDER.build();
 }
