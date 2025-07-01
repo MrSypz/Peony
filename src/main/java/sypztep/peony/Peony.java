@@ -9,7 +9,9 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import org.slf4j.Logger;
+import sypztep.peony.common.command.StatsDebugCommand;
 import sypztep.peony.module.level.event.AttachOnJoinEvent;
 import sypztep.peony.common.init.ModAttachments;
 import sypztep.peony.common.init.ModPayload;
@@ -31,8 +33,8 @@ public class Peony {
         ModAttachments.ATTACHMENT_TYPES.register(modEventBus);
         modContainer.registerConfig(ModConfig.Type.COMMON, PeonyConfig.SPEC);
 
-        NeoForge.EVENT_BUS.register(CombatEventHandler.class);
         NeoForge.EVENT_BUS.register(this);
+        NeoForge.EVENT_BUS.register(CombatEventHandler.class);
         NeoForge.EVENT_BUS.addListener(AttachOnJoinEvent::onEntityJoinWorld);
         NeoForge.EVENT_BUS.addListener(DamageXpEvent::onLivingDamage);
         NeoForge.EVENT_BUS.addListener(DamageXpEvent::onLivingDeath);
@@ -42,5 +44,8 @@ public class Peony {
     public void onAddReloadListeners(AddReloadListenerEvent event) {
         event.addListener(new MobStatsReloadListenr());
     }
-
+    @SubscribeEvent
+    public void registerCommands(RegisterCommandsEvent event) {
+        StatsDebugCommand.register(event.getDispatcher());
+    }
 }
