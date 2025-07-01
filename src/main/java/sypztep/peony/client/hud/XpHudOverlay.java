@@ -60,6 +60,11 @@ public class XpHudOverlay implements LayeredDraw.Layer {
         boolean isDynamicMode = PeonyConfig.XP_HUD_DYNAMIC_MODE.get();
         double autoHideDelay = PeonyConfig.XP_HUD_AUTO_HIDE_DELAY.get();
 
+        // Initialize dynamic mode on first run
+        if (isDynamicMode && hideTimer == 0.0f && shouldBeVisible) {
+            hideTimer = (float) autoHideDelay; // Start with auto-hide timer
+        }
+
         // Detect XP gain and start timer
         if (currentXp > lastXp) {
             xpGainGlowTimer = XP_GLOW_DURATION;
@@ -137,17 +142,20 @@ public class XpHudOverlay implements LayeredDraw.Layer {
     private void renderXpHud(GuiGraphics guiGraphics, String playerName, int level, int currentXp, int xpToNext,
                              float xpProgress, boolean isMaxLevel, int hudX) {
 
-        int hudWidth = BAR_WIDTH + 10;
-        int hudHeight = 40; // Increased height for player name
-
         Minecraft minecraft = Minecraft.getInstance();
+
+        // Calculate dynamic HUD width based on content
+        String playerLevelText = playerName + " | " + (isMaxLevel ? "MAX" : "Lv." + level);
+        int playerTextWidth = minecraft.font.width(playerLevelText);
+        int minHudWidth = BAR_WIDTH + 10; // Minimum width for XP bar
+        int hudWidth = Math.max(minHudWidth, playerTextWidth + 10); // Ensure enough padding
+        int hudHeight = 40; // Increased height for player name
 
         // Background panel
         guiGraphics.fill(hudX - 3, HUD_Y - 3, hudX + hudWidth, HUD_Y + hudHeight, BACKGROUND_COLOR);
         drawBorder(guiGraphics, hudX - 3, HUD_Y - 3, hudWidth + 3, hudHeight + 3);
 
         // Player name and level text
-        String playerLevelText = playerName + " | " + (isMaxLevel ? "MAX" : "Lv." + level);
         int levelColor = isMaxLevel ? 0xFFFF6600 : LEVEL_COLOR;
         guiGraphics.drawString(minecraft.font, playerLevelText, hudX, HUD_Y, levelColor, true);
 
