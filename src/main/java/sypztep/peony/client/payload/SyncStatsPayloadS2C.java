@@ -128,7 +128,6 @@ public record SyncStatsPayloadS2C(
                 }
 
                 if (packet.shouldSyncXpToNext()) {
-                    // Update xpToNextLevel - you might need to add a setter in LevelSystem
                     stats.getLevelSystem().updateNextLvl();
                 }
 
