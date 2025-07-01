@@ -29,15 +29,6 @@ public final class CombatHelper {
         double hitChance = (accuracy - evasion + 80.0) / 100.0;
         return Mth.clamp(hitChance, 0.05, 1.0); // 5% minimum, 100% maximum
     }
-
-    public static boolean calculateHit(LivingEntity attacker, LivingEntity defender) {
-        double attackerAccuracy = calculateAccuracy(attacker.getAttributeValue(ModAttributes.ACCURACY));
-        double defenderEvasion = calculateEvasion(defender.getAttributeValue(ModAttributes.EVASION));
-
-        double hitChance = calculateHitChance(attackerAccuracy, defenderEvasion);
-        return attacker.level().random.nextDouble() < hitChance;
-    }
-
     //Damage Modifier Event
     @FunctionalInterface
     private interface DamageModifier {
