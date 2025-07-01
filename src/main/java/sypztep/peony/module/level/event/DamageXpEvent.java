@@ -146,7 +146,7 @@ public class DamageXpEvent {
             Component levelMessage = Component.literal(String.format("§6§lLEVEL UP! §r§aLevel %d §7(+%d stat points)",
                     currentLevel, statPointsGained));
             player.sendSystemMessage(levelMessage);
-
+//TODO: Replace with new sound? 2/7/2025
             player.playNotifySound(net.minecraft.sounds.SoundEvents.PLAYER_LEVELUP,
                     net.minecraft.sounds.SoundSource.PLAYERS, 1.0f, 1.5f);
         }
