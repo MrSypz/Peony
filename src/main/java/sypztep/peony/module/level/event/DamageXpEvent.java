@@ -31,16 +31,14 @@ public class DamageXpEvent {
 
         if (target.level().isClientSide()) return;
 
-
         Player attacker = extractPlayerFromDamageSource(damageSource);
         if (attacker == null) return;
-
 
         if (attacker == target || target instanceof Player) return;
 
         // Get or initialize damage tracking
         DamageTrackingAttachment tracking = target.getData(ModAttachments.DAMAGE_TRACKING.get());
-        float damageDealt = event.getOriginalDamage();
+        float damageDealt = event.getNewDamage();
         tracking.addDamage(attacker.getUUID(), damageDealt);
     }
 
@@ -67,19 +65,12 @@ public class DamageXpEvent {
     // ================ Helper Methods ================
 
     private static Player extractPlayerFromDamageSource(DamageSource damageSource) {
-        if (damageSource.getEntity() instanceof Player player) {
-            return player;
-        }
+        if (damageSource.getEntity() instanceof Player player) return player;
 
-        if (damageSource.getDirectEntity() instanceof Player player) {
-            return player;
-        }
+        if (damageSource.getDirectEntity() instanceof Player player) return player;
 
-        if (damageSource.getDirectEntity() instanceof OwnableEntity ownable) {
-            if (ownable.getOwner() instanceof Player player) {
-                return player;
-            }
-        }
+        if (damageSource.getDirectEntity() instanceof OwnableEntity ownable)
+            if (ownable.getOwner() instanceof Player player) return player;
 
         return null;
     }
@@ -108,7 +99,6 @@ public class DamageXpEvent {
     private static void giveXpToPlayer(ServerPlayer player, int xpAmount, LivingEntity killedEntity, float damagePercentage) {
         LivingEntityStatsAttachment stats = player.getData(ModAttachments.LIVINGSTATS.get());
 
-        // Store old values
         int oldLevel = stats.getLevel();
         int oldXp = stats.getXp();
         int oldStatPoints = stats.getLevelSystem().getStatPoints();
@@ -116,19 +106,15 @@ public class DamageXpEvent {
         boolean xpGained = stats.getLevelSystem().addExperience(xpAmount);
 
         if (!xpGained) {
-            // Player is at max level, show different message
-            if (stats.getLevelSystem().isAtMaxLevel()) {
-                sendMaxLevelMessage(player, killedEntity);
-            }
+            if (stats.getLevelSystem().isAtMaxLevel()) sendMaxLevelMessage(player, killedEntity);
             return;
         }
 
-        // Continue with normal XP gain logic...
         stats.smartSync(player, oldLevel, oldXp, oldStatPoints);
-        sendXpGainMessage(player, xpAmount, killedEntity, damagePercentage,
-                stats.getLevel() > oldLevel);
-    }
 
+        boolean leveledUp = stats.getLevel() > oldLevel;
+        sendXpGainMessage(player, xpAmount, killedEntity, damagePercentage, leveledUp);
+    }
 
     private static void sendXpGainMessage(ServerPlayer player, int xpAmount, LivingEntity killedEntity,
                                           float damagePercentage, boolean leveledUp) {
@@ -154,12 +140,18 @@ public class DamageXpEvent {
         // Level up message
         if (leveledUp) {
             LivingEntityStatsAttachment stats = player.getData(ModAttachments.LIVINGSTATS.get());
-            int lvl = stats.getLevel();
+            int currentLevel = stats.getLevel();
+            int statPointsGained = stats.getLevelSystem().getGainStatPointsForLevel(currentLevel);
+
             Component levelMessage = Component.literal(String.format("§6§lLEVEL UP! §r§aLevel %d §7(+%d stat points)",
-                    lvl, stats.getLevelSystem().getGainStatPointsForLevel(lvl)));
+                    currentLevel, statPointsGained));
             player.sendSystemMessage(levelMessage);
+
+            player.playNotifySound(net.minecraft.sounds.SoundEvents.PLAYER_LEVELUP,
+                    net.minecraft.sounds.SoundSource.PLAYERS, 1.0f, 1.5f);
         }
     }
+
     private static void sendMaxLevelMessage(ServerPlayer player, LivingEntity killedEntity) {
         Component message = Component.literal(String.format(
                 "§6§lMAX LEVEL §r§7Killed %s §8(No XP gained)",
