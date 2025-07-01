@@ -37,12 +37,12 @@ public class DeathPenaltyEvent {
 
             stats.syncXp(player);
 
-            sendDeathPenaltyMessage(player, xpLost);
+            sendDeathPenaltyMessage(player, xpLost, penaltyPercentage);
         } else sendNoPenaltyMessage(player, "No XP to lose");
     }
 
-    private static void sendDeathPenaltyMessage(ServerPlayer player, int lostXP) {
-        double penaltyPercentage = PeonyConfig.DEATH_XP_PENALTY_PERCENTAGE.get() * 100;
+    private static void sendDeathPenaltyMessage(ServerPlayer player, int lostXP,double ptc) {
+        double penaltyPercentage = ptc * 100;
 
         Component message = Component.literal("You have lost: ")
                 .withStyle(style -> style.withColor(0xFFD700)) // Gold color
