@@ -7,7 +7,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.neoforge.attachment.IAttachmentHolder;
 import net.neoforged.neoforge.attachment.IAttachmentSerializer;
 
-import sypztep.peony.common.sync.StatsSync;
+import sypztep.peony.common.util.StatsSync;
 import sypztep.peony.module.level.LevelSystem;
 import sypztep.peony.module.level.LivingStats;
 import sypztep.peony.module.level.StatTypes;

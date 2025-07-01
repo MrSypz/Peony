@@ -1,4 +1,4 @@
-package sypztep.peony.common.sync;
+package sypztep.peony.common.util;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
