@@ -100,17 +100,14 @@ public class DamageXpEvent {
         LivingEntityStatsAttachment stats = player.getData(ModAttachments.LIVINGSTATS.get());
 
         int oldLevel = stats.getLevel();
-        int oldXp = stats.getXp();
-        int oldStatPoints = stats.getLevelSystem().getStatPoints();
-
-        boolean xpGained = stats.getLevelSystem().addExperience(xpAmount);
+        
+        // Use the new flattened API that handles sync automatically
+        boolean xpGained = stats.addExperience(player, xpAmount);
 
         if (!xpGained) {
             if (stats.getLevelSystem().isAtMaxLevel()) sendMaxLevelMessage(player, killedEntity);
             return;
         }
-
-        stats.smartSync(player, oldLevel, oldXp, oldStatPoints);
 
         boolean leveledUp = stats.getLevel() > oldLevel;
         sendXpGainMessage(player, xpAmount, killedEntity, damagePercentage, leveledUp);

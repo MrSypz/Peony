@@ -33,9 +33,8 @@ public class DeathPenaltyEvent {
         xpLost = Math.min(xpLost, currentXp);
 
         if (xpLost > 0) {
-            stats.getLevelSystem().subtractExperience(xpLost);
-
-            stats.syncXp(player);
+            // Use the new flattened API with automatic sync
+            stats.setXp(player, stats.getXp() - xpLost);
 
             sendDeathPenaltyMessage(player, xpLost, penaltyPercentage);
         } else sendNoPenaltyMessage(player, "No XP to lose");

@@ -7,10 +7,10 @@ import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.neoforge.attachment.IAttachmentHolder;
 import net.neoforged.neoforge.attachment.IAttachmentSerializer;
 
-import net.neoforged.neoforge.network.PacketDistributor;
-import sypztep.peony.client.payload.SyncStatsPayloadS2C;
+import sypztep.peony.common.sync.StatsSync;
 import sypztep.peony.module.level.LevelSystem;
 import sypztep.peony.module.level.LivingStats;
+import sypztep.peony.module.level.StatTypes;
 
 import java.text.DecimalFormat;
 
@@ -23,6 +23,64 @@ public class LivingEntityStatsAttachment {
 
     public LivingStats getLivingStats() { return livingStats; }
 
+    // ===== FLATTENED API - Direct access methods =====
+    
+    /**
+     * Adds experience directly, returning whether any was actually added.
+     * Handles level ups automatically and triggers sync.
+     */
+    public boolean addExperience(LivingEntity entity, int amount) {
+        int oldLevel = getLevel();
+        int oldXp = getXp();
+        int oldStatPoints = getStatPoints();
+        
+        boolean added = livingStats.getLevelSystem().addExperience(amount);
+        
+        if (added) {
+            StatsSync.smartSync(entity, this, oldLevel, oldXp, oldStatPoints);
+        }
+        
+        return added;
+    }
+
+    /**
+     * Sets experience directly with sync.
+     */
+    public void setXp(LivingEntity entity, int xp) {
+        int oldXp = getXp();
+        livingStats.getLevelSystem().setXp(xp);
+        
+        if (oldXp != getXp()) {
+            StatsSync.syncXp(entity, this);
+        }
+    }
+
+    /**
+     * Sets stat points directly with sync.
+     */
+    public void setStatPoints(LivingEntity entity, int amount) {
+        int oldStatPoints = getStatPoints();
+        livingStats.getLevelSystem().setStatPoints(amount);
+        
+        if (oldStatPoints != getStatPoints()) {
+            StatsSync.syncStatPoints(entity, this);
+        }
+    }
+    
+    /**
+     * Sets level directly with sync.
+     */
+    public void setLevel(LivingEntity entity, int level) {
+        int oldLevel = getLevel();
+        livingStats.getLevelSystem().setLevel(level);
+        
+        if (oldLevel != getLevel()) {
+            StatsSync.syncLevel(entity, this);
+        }
+    }
+
+    // ===== SIMPLE ACCESSOR METHODS =====
+    
     public void addExperience(int amount) {
         livingStats.getLevelSystem().addExperience(amount);
     }
@@ -58,7 +116,36 @@ public class LivingEntityStatsAttachment {
     public int getXpToNextLevel() {
         return livingStats.getLevelSystem().getXpToNextLevel();
     }
-    // HELPER
+    
+    // ===== STAT ACCESS METHODS =====
+    
+    /**
+     * Use stat points for a specific stat type with sync.
+     */
+    public void useStatPoint(LivingEntity entity, StatTypes statType, int points) {
+        int oldStatPoints = getStatPoints();
+        livingStats.useStatPoint(statType, points);
+        
+        if (oldStatPoints != getStatPoints()) {
+            StatsSync.syncStatPoints(entity, this);
+        }
+    }
+    
+    /**
+     * Reset all stats and return points with sync.
+     */
+    public void resetStats(LivingEntity entity) {
+        if (entity instanceof ServerPlayer serverPlayer) {
+            int oldStatPoints = getStatPoints();
+            livingStats.resetStats(serverPlayer);
+            
+            if (oldStatPoints != getStatPoints()) {
+                StatsSync.syncStatPoints(entity, this);
+            }
+        }
+    }
+    
+    // ===== HELPER METHODS =====
     public static String formatNumber(int number) {
         if (number >= 1_000_000) {
             return String.format("%.1fM", number / 1_000_000.0);
@@ -68,81 +155,49 @@ public class LivingEntityStatsAttachment {
             return String.valueOf(number);
         }
     }
+    
+    // ===== CENTRALIZED SYNC METHODS =====
+    
+    /**
+     * Synchronizes level only.
+     */
     public void syncLevel(LivingEntity entity) {
-        if (entity.level().isClientSide()) return;
-
-        SyncStatsPayloadS2C packet = new SyncStatsPayloadS2C.Builder(entity.getId())
-                .level(getLevel())
-                .build();
-
-        sendToTrackingPlayers(entity, packet);
+        StatsSync.syncLevel(entity, this);
     }
 
+    /**
+     * Synchronizes experience and experience to next level.
+     */
     public void syncXp(LivingEntity entity) {
-        if (entity.level().isClientSide()) return;
-
-        SyncStatsPayloadS2C packet = new SyncStatsPayloadS2C.Builder(entity.getId())
-                .xp(getXp())
-                .xpToNext(getXpToNextLevel())
-                .build();
-
-        sendToTrackingPlayers(entity, packet);
+        StatsSync.syncXp(entity, this);
     }
 
+    /**
+     * Synchronizes stat points only.
+     */
     public void syncStatPoints(LivingEntity entity) {
-        if (entity.level().isClientSide()) return;
-
-        SyncStatsPayloadS2C packet = new SyncStatsPayloadS2C.Builder(entity.getId())
-                .statPoints(getLevelSystem().getStatPoints())
-                .build();
-
-        sendToTrackingPlayers(entity, packet);
+        StatsSync.syncStatPoints(entity, this);
     }
 
+    /**
+     * Synchronizes all stats.
+     */
     public void syncAll(LivingEntity entity) {
-        if (entity.level().isClientSide()) return;
-
-        SyncStatsPayloadS2C packet = new SyncStatsPayloadS2C.Builder(entity.getId())
-                .all(getLevel(), getXp(), getXpToNextLevel(), getLevelSystem().getStatPoints())
-                .build();
-
-        sendToTrackingPlayers(entity, packet);
+        StatsSync.syncAll(entity, this);
     }
+    
+    /**
+     * Synchronizes stats to a specific player.
+     */
     public void syncToPlayer(ServerPlayer player) {
-        if (player.level().isClientSide()) return;
-
-        SyncStatsPayloadS2C packet = new SyncStatsPayloadS2C.Builder(player.getId())
-                .all(getLevel(), getXp(), getXpToNextLevel(), getStatPoints())
-                .build();
-
-        PacketDistributor.sendToPlayer(player, packet);
+        StatsSync.syncToPlayer(player, this);
     }
 
+    /**
+     * Smart synchronization - only syncs changed values.
+     */
     public void smartSync(LivingEntity entity, int oldLevel, int oldXp, int oldStatPoints) {
-        if (entity.level().isClientSide()) return;
-
-        SyncStatsPayloadS2C.Builder builder = new SyncStatsPayloadS2C.Builder(entity.getId());
-
-        if (getLevel() != oldLevel)
-            builder.level(getLevel());
-
-        if (getXp() != oldXp)
-            builder.xp(getXp()).xpToNext(getXpToNextLevel());
-
-
-        if (getLevelSystem().getStatPoints() != oldStatPoints)
-            builder.statPoints(getLevelSystem().getStatPoints());
-
-        SyncStatsPayloadS2C packet = builder.build();
-        if (packet.syncMask() != 0) { // Only send if something changed
-            if (entity instanceof ServerPlayer serverPlayer)
-                PacketDistributor.sendToPlayer(serverPlayer, packet);
-            sendToTrackingPlayers(entity, packet);
-        }
-    }
-
-    private void sendToTrackingPlayers(LivingEntity entity, SyncStatsPayloadS2C packet) {
-        PacketDistributor.sendToPlayersTrackingEntity(entity, packet);
+        StatsSync.smartSync(entity, this, oldLevel, oldXp, oldStatPoints);
     }
 
     public static class Serializer implements IAttachmentSerializer<CompoundTag, LivingEntityStatsAttachment> {

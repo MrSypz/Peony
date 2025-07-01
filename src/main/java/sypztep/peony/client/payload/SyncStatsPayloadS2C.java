@@ -119,6 +119,7 @@ public record SyncStatsPayloadS2C(
 
                 LivingEntityStatsAttachment stats = livingEntity.getData(ModAttachments.LIVINGSTATS.get());
 
+                // Use direct methods instead of deep chaining
                 if (packet.shouldSyncLevel()) {
                     stats.getLevelSystem().setLevel(packet.level());
                 }
