@@ -30,6 +30,9 @@ public class LivingEntityStatsAttachment {
     public void setStatPoints(int amount) {
         livingStats.getLevelSystem().setStatPoints(amount);
     }
+    public int getStatPoints() {
+        return livingStats.getLevelSystem().getStatPoints();
+    }
 
     public int getLevel() {
         return livingStats.getLevelSystem().getLevel();
@@ -52,7 +55,7 @@ public class LivingEntityStatsAttachment {
         return livingStats.getLevelSystem().getXp();
     }
 
-    public int getNextXpLevel() {
+    public int getXpToNextLevel() {
         return livingStats.getLevelSystem().getXpToNextLevel();
     }
     // HELPER
@@ -80,7 +83,7 @@ public class LivingEntityStatsAttachment {
 
         SyncStatsPayloadS2C packet = new SyncStatsPayloadS2C.Builder(entity.getId())
                 .xp(getXp())
-                .xpToNext(getNextXpLevel())
+                .xpToNext(getXpToNextLevel())
                 .build();
 
         sendToTrackingPlayers(entity, packet);
@@ -100,32 +103,40 @@ public class LivingEntityStatsAttachment {
         if (entity.level().isClientSide()) return;
 
         SyncStatsPayloadS2C packet = new SyncStatsPayloadS2C.Builder(entity.getId())
-                .all(getLevel(), getXp(), getNextXpLevel(), getLevelSystem().getStatPoints())
+                .all(getLevel(), getXp(), getXpToNextLevel(), getLevelSystem().getStatPoints())
                 .build();
 
         sendToTrackingPlayers(entity, packet);
     }
+    public void syncToPlayer(ServerPlayer player) {
+        if (player.level().isClientSide()) return;
 
-    // Smart sync - only sync what changed
+        SyncStatsPayloadS2C packet = new SyncStatsPayloadS2C.Builder(player.getId())
+                .all(getLevel(), getXp(), getXpToNextLevel(), getStatPoints())
+                .build();
+
+        PacketDistributor.sendToPlayer(player, packet);
+    }
+
     public void smartSync(LivingEntity entity, int oldLevel, int oldXp, int oldStatPoints) {
         if (entity.level().isClientSide()) return;
 
         SyncStatsPayloadS2C.Builder builder = new SyncStatsPayloadS2C.Builder(entity.getId());
 
-        if (getLevel() != oldLevel) {
+        if (getLevel() != oldLevel)
             builder.level(getLevel());
-        }
 
-        if (getXp() != oldXp) {
-            builder.xp(getXp()).xpToNext(getNextXpLevel());
-        }
+        if (getXp() != oldXp)
+            builder.xp(getXp()).xpToNext(getXpToNextLevel());
 
-        if (getLevelSystem().getStatPoints() != oldStatPoints) {
+
+        if (getLevelSystem().getStatPoints() != oldStatPoints)
             builder.statPoints(getLevelSystem().getStatPoints());
-        }
 
         SyncStatsPayloadS2C packet = builder.build();
         if (packet.syncMask() != 0) { // Only send if something changed
+            if (entity instanceof ServerPlayer serverPlayer)
+                PacketDistributor.sendToPlayer(serverPlayer, packet);
             sendToTrackingPlayers(entity, packet);
         }
     }
