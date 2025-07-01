@@ -10,7 +10,7 @@ import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import sypztep.peony.Peony;
-import sypztep.peony.client.gui.XpHudOverlay;
+import sypztep.peony.client.hud.XpHudOverlay;
 
 @Mod(value = Peony.MODID, dist = Dist.CLIENT)
 public class PeonyClient  {
