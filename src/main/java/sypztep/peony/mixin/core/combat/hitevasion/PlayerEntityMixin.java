@@ -37,7 +37,7 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin {
     @ModifyVariable(method = "attack", at = @At("STORE"), ordinal = 2)
     private boolean doCrit(boolean original, Entity target) {
         if (!this.level().isClientSide()) {
-            if (this.isCritical()) {
+            if (this.isCritical() && isHit()) {
                 this.setCritical(true);
                 applyCriticalParticle(target);
                 return true;

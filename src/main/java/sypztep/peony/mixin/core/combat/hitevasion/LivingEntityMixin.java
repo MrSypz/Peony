@@ -60,10 +60,7 @@ public abstract class LivingEntityMixin extends Entity implements CriticalOverha
         super(type, world);
     }
 
-    @Inject(method = "actuallyHurt", at = @At(
-            value = "INVOKE",
-            target = "Lnet/neoforged/neoforge/common/CommonHooks;onLivingDamagePre(Lnet/minecraft/world/entity/LivingEntity;Lnet/neoforged/neoforge/common/damagesource/DamageContainer;)F"
-    ))
+    @Inject(method = "actuallyHurt", at = @At(value = "INVOKE", target = "Lnet/neoforged/neoforge/common/CommonHooks;onLivingDamagePre(Lnet/minecraft/world/entity/LivingEntity;Lnet/neoforged/neoforge/common/damagesource/DamageContainer;)F"))
     private void monsterCrit(DamageSource source, float amount, CallbackInfo ci) {
         if (!this.level().isClientSide()) {
             Entity attacker = source.getEntity();
@@ -83,11 +80,7 @@ public abstract class LivingEntityMixin extends Entity implements CriticalOverha
         }
     }
 
-    @Inject(method = "hurt", at = @At(
-            value = "INVOKE",
-            target = "Ljava/util/Stack;push(Ljava/lang/Object;)Ljava/lang/Object;",
-            shift = At.Shift.AFTER
-    ), cancellable = true)
+    @Inject(method = "hurt", at = @At(value = "INVOKE", target = "Ljava/util/Stack;push(Ljava/lang/Object;)Ljava/lang/Object;", shift = At.Shift.AFTER), cancellable = true)
     private void handleDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         if (this.level().isClientSide()) return;
 
@@ -129,6 +122,7 @@ public abstract class LivingEntityMixin extends Entity implements CriticalOverha
         return this.isCrit;
     }
 
+
     @Override
     public float getCritDamage() {
         return (float) this.getAttributeValue(ModAttributes.CRIT_DAMAGE);
@@ -140,6 +134,11 @@ public abstract class LivingEntityMixin extends Entity implements CriticalOverha
     }
 
     @Unique
+    public boolean isHit() {
+        return isHit;
+    }
+
+    @Unique
     private void playCriticalSound(Entity attacker) {
         attacker.level().playSound(this, this.getOnPos(), SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.HOSTILE, SOUND_VOLUME, SOUND_PITCH);
     }
@@ -148,6 +147,7 @@ public abstract class LivingEntityMixin extends Entity implements CriticalOverha
     private void playMissingSound() {
         target.level().playSound(this, target.getOnPos(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.HOSTILE, MISS_SOUND_VOLUME, MISS_SOUND_PITCH + (float) random.nextGaussian());
     }
+
 
     @Unique
     public void applyCriticalParticle(Entity target) {

@@ -1,14 +1,16 @@
 package sypztep.peony.module.combat.event;
 
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import sypztep.peony.module.combat.util.CombatHelper;
 import yesman.epicfight.api.neoforgeevent.playerpatch.DealDamageEvent;
+import yesman.epicfight.api.neoforgeevent.playerpatch.HurtEvent;
 import yesman.epicfight.api.utils.math.ValueModifier;
 
 public class CombatEventHandler {
-    @SubscribeEvent()
+    @SubscribeEvent
     public static void onDealDamage(DealDamageEvent.Pre event) {
         LivingEntity target = event.getTarget();
         LivingDamageEvent.Pre neoforgeEvent = event.getNeoForgeEvent();
@@ -25,5 +27,12 @@ public class CombatEventHandler {
             if (existing != null) existing.merge(ValueModifier.multiplier(multiplier));
              else event.getDamageSource().setDamageModifier(ValueModifier.multiplier(multiplier));
         }
+    }
+    @SubscribeEvent
+    public static void onPlayerHurt(HurtEvent.Post event) {
+        Player player = event.getPlayerPatch().getOriginal();
+        float originalDamage = event.getOriginalDamage();
+        float modifiedDamage = CombatHelper.modifyDamage(player, originalDamage, event.getDamageSource());
+        event.setDamage(modifiedDamage);
     }
 }
