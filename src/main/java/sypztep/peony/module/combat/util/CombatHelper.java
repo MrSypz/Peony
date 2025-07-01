@@ -14,6 +14,31 @@ import sypztep.peony.common.init.ModParticle;
 import java.util.function.BiPredicate;
 
 public final class CombatHelper {
+    private static final short BASE_ACCURACY = 70;
+    private static final short BASE_EVASION = 80;
+
+    public static double calculateAccuracy(double baseValue) {
+        return BASE_ACCURACY + baseValue;
+    }
+
+    public static double calculateEvasion(double baseValue) {
+        return BASE_EVASION + baseValue;
+    }
+
+    public static double calculateHitChance(double accuracy, double evasion) {
+        double hitChance = (accuracy - evasion + 80.0) / 100.0;
+        return Mth.clamp(hitChance, 0.05, 1.0); // 5% minimum, 100% maximum
+    }
+
+    public static boolean calculateHit(LivingEntity attacker, LivingEntity defender) {
+        double attackerAccuracy = calculateAccuracy(attacker.getAttributeValue(ModAttributes.ACCURACY));
+        double defenderEvasion = calculateEvasion(defender.getAttributeValue(ModAttributes.EVASION));
+
+        double hitChance = calculateHitChance(attackerAccuracy, defenderEvasion);
+        return attacker.level().random.nextDouble() < hitChance;
+    }
+
+    //Damage Modifier Event
     @FunctionalInterface
     private interface DamageModifier {
         float apply(LivingEntity attacker, LivingEntity target, float currentDamage);
