@@ -2,8 +2,6 @@ package sypztep.peony.client.screen;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
@@ -11,11 +9,14 @@ import sypztep.peony.common.attachment.LivingEntityStatsAttachment;
 import sypztep.peony.common.init.ModAttachments;
 import sypztep.peony.module.level.StatTypes;
 import sypztep.peony.module.level.Stat;
+import sypztep.tyrannus.client.screen.BaseScreen;
+import sypztep.tyrannus.client.screen.panel.Button;
+import sypztep.tyrannus.client.screen.panel.UIPanel;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class StatsUpdateScreen extends Screen {
+public class StatsUpdateScreen extends BaseScreen {
     private static final int PANEL_WIDTH = 300;
     private static final int PANEL_HEIGHT = 350;
     private static final int STAT_ROW_HEIGHT = 25;
@@ -33,6 +34,7 @@ public class StatsUpdateScreen extends Screen {
     private LivingEntityStatsAttachment statsAttachment;
     private List<Button> upgradeButtons = new ArrayList<>();
     private int hoveredStatIndex = -1;
+    private UIPanel mainPanel;
 
     public StatsUpdateScreen() {
         super(Component.literal("Character Stats"));
@@ -55,6 +57,10 @@ public class StatsUpdateScreen extends Screen {
         int panelX = (this.width - PANEL_WIDTH) / 2;
         int panelY = (this.height - PANEL_HEIGHT) / 2;
         
+        // Create main UI panel
+        this.mainPanel = new UIPanel(panelX, panelY, PANEL_WIDTH, PANEL_HEIGHT);
+        this.addPanel(mainPanel);
+        
         // Create upgrade buttons for each stat
         upgradeButtons.clear();
         StatTypes[] statTypes = StatTypes.values();
@@ -65,20 +71,17 @@ public class StatsUpdateScreen extends Screen {
             int buttonX = panelX + PANEL_WIDTH - 30;
             int buttonY = panelY + 60 + (i * STAT_ROW_HEIGHT) + 5;
             
-            Button upgradeButton = Button.builder(Component.literal("+"))
-                    .bounds(buttonX, buttonY, BUTTON_WIDTH, BUTTON_HEIGHT)
-                    .onPress(button -> upgradeStatPoint(statType))
-                    .build();
+            Button upgradeButton = new Button(buttonX, buttonY, BUTTON_WIDTH, BUTTON_HEIGHT, 
+                    Component.literal("+"), button -> upgradeStatPoint(statType));
             
             upgradeButtons.add(upgradeButton);
-            this.addRenderableWidget(upgradeButton);
+            this.mainPanel.addChild(upgradeButton);
         }
         
         // Close button
-        this.addRenderableWidget(Button.builder(Component.literal("Close"))
-                .bounds(panelX + PANEL_WIDTH - 60, panelY + PANEL_HEIGHT - 30, 50, 20)
-                .onPress(button -> onClose())
-                .build());
+        Button closeButton = new Button(panelX + PANEL_WIDTH - 60, panelY + PANEL_HEIGHT - 30, 50, 20,
+                Component.literal("Close"), button -> onClose());
+        this.mainPanel.addChild(closeButton);
     }
 
     @Override
