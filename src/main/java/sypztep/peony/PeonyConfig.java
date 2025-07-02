@@ -52,6 +52,11 @@ public final class PeonyConfig {
             .comment("Auto-hide delay in seconds for dynamic XP HUD mode")
             .defineInRange("xpHudAutoHideDelay", 3.0, 1.0, 10.0);
 
+    // Status Screen Configuration
+    public static final ModConfigSpec.ConfigValue<String> STATUS_SCREEN_KEY = BUILDER
+            .comment("Key binding for opening the status screen (default: 'c')")
+            .define("statusScreenKey", "c");
+
     // อันนี้ควรอยู่อันท้าย
     public static final ModConfigSpec SPEC = BUILDER.build();
 }
