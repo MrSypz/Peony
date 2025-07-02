@@ -133,7 +133,6 @@ public class XpHudOverlay implements LayeredDraw.Layer {
                 }
             }
         } else {
-            // In static mode, always visible
             slideOffset = 0.0f;
             shouldBeVisible = true;
         }
