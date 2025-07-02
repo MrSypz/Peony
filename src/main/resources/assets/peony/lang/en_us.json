@@ -1,5 +1,8 @@
 {
   "peony.text.critical": "Critical",
   "peony.text.missing": "Miss",
-  "peony.text.backattack": "Back Attack"
+  "peony.text.backattack": "Back Attack",
+  "gui.peony.status.title": "Status",
+  "key.peony.status_screen": "Open Status Screen",
+  "key.categories.peony": "Peony"
 }
