@@ -1,5 +1,7 @@
 {
   "peony.text.critical": "Critical",
   "peony.text.missing": "Miss",
-  "peony.text.backattack": "Back Attack"
+  "peony.text.backattack": "Back Attack",
+  "key.categories.peony": "Peony",
+  "key.peony.open_stats": "Open Stats Screen"
 }
