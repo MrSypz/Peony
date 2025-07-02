@@ -120,12 +120,16 @@ public class StatsUpdateScreen extends Screen {
     }
 
     private void renderStats(GuiGraphics guiGraphics, int panelX, int panelY, int mouseX, int mouseY) {
+        if (statsAttachment == null) return;
+        
         StatTypes[] statTypes = StatTypes.values();
         hoveredStatIndex = -1;
         
         for (int i = 0; i < statTypes.length; i++) {
             StatTypes statType = statTypes[i];
             Stat stat = statsAttachment.getLivingStats().getStat(statType);
+            
+            if (stat == null) continue; // Skip if stat is null
             
             int y = panelY + 60 + (i * STAT_ROW_HEIGHT);
             int x = panelX + 10;
@@ -153,38 +157,57 @@ public class StatsUpdateScreen extends Screen {
                 int cost = stat.getIncreasePerPoint();
                 String costText = "(" + cost + ")";
                 int costX = panelX + PANEL_WIDTH - 80;
-                guiGraphics.drawString(this.font, costText, costX, y + 8, 0xFFAAAAA);
+                guiGraphics.drawString(this.font, costText, costX, y + 8, 0xFFAAAAAA);
             }
         }
     }
 
     private void renderStatTooltip(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        if (hoveredStatIndex >= 0 && hoveredStatIndex < StatTypes.values().length) {
+        if (hoveredStatIndex >= 0 && hoveredStatIndex < StatTypes.values().length && statsAttachment != null) {
             StatTypes statType = StatTypes.values()[hoveredStatIndex];
             Stat stat = statsAttachment.getLivingStats().getStat(statType);
             
-            List<Component> tooltip = new ArrayList<>();
-            tooltip.add(Component.literal(statType.getName().toUpperCase()).withStyle(ChatFormatting.BOLD, ChatFormatting.GOLD));
-            
-            // Add stat description with +1 point preview
-            List<Component> effectDescription = stat.getEffectDescription(1);
-            tooltip.addAll(effectDescription);
-            
-            // Render tooltip
-            guiGraphics.renderTooltip(this.font, tooltip, mouseX, mouseY);
+            if (stat != null) {
+                List<Component> tooltip = new ArrayList<>();
+                tooltip.add(Component.literal(statType.getName().toUpperCase()).withStyle(ChatFormatting.BOLD, ChatFormatting.GOLD));
+                
+                // Add current value
+                tooltip.add(Component.literal("Current Value: " + stat.getValue()).withStyle(ChatFormatting.WHITE));
+                
+                // Add cost information
+                int cost = stat.getIncreasePerPoint();
+                tooltip.add(Component.literal("Cost to Upgrade: " + cost + " points").withStyle(ChatFormatting.YELLOW));
+                
+                // Add empty line
+                tooltip.add(Component.empty());
+                
+                // Add stat description with +1 point preview
+                List<Component> effectDescription = stat.getEffectDescription(1);
+                if (effectDescription != null) {
+                    tooltip.addAll(effectDescription);
+                }
+                
+                // Render tooltip
+                guiGraphics.renderTooltip(this.font, tooltip, mouseX, mouseY);
+            }
         }
     }
 
     private void updateButtonStates() {
+        if (statsAttachment == null) return;
+        
         int availablePoints = statsAttachment.getStatPoints();
         StatTypes[] statTypes = StatTypes.values();
         
         for (int i = 0; i < upgradeButtons.size() && i < statTypes.length; i++) {
             Button button = upgradeButtons.get(i);
             Stat stat = statsAttachment.getLivingStats().getStat(statTypes[i]);
-            int cost = stat.getIncreasePerPoint();
-            
-            button.active = availablePoints >= cost;
+            if (stat != null) {
+                int cost = stat.getIncreasePerPoint();
+                button.active = availablePoints >= cost;
+            } else {
+                button.active = false;
+            }
         }
     }
 
