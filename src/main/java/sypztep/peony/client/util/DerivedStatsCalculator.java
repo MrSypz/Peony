@@ -74,28 +74,28 @@ public class DerivedStatsCalculator {
     }
 
     /**
-     * Calculate Hit Rate (HIT) - accuracy
+     * Calculate Accuracy - hit rate
      * Formula: 175 + DEX + (level if available, otherwise base 175)
      */
-    public static int calculateHIT(LivingStats stats) {
+    public static int calculateAccuracy(LivingStats stats) {
         int level = stats.getLevelSystem().getLevel();
         return 175 + stats.getStat(StatTypes.DEXTERITY).getValue() + level;
     }
 
     /**
-     * Calculate Flee Rate (FLEE) - base evasion
+     * Calculate Evasion - base evasion rate
      * Formula: 100 + AGI + level
      */
-    public static int calculateBaseFLEE(LivingStats stats) {
+    public static int calculateBaseEvasion(LivingStats stats) {
         int level = stats.getLevelSystem().getLevel();
         return 100 + stats.getStat(StatTypes.AGILITY).getValue() + level;
     }
 
     /**
-     * Calculate Flee Rate bonus from AGI
+     * Calculate Evasion bonus from AGI
      * Formula: AGI / 10 (simplified)
      */
-    public static int calculateBonusFLEE(LivingStats stats) {
+    public static int calculateBonusEvasion(LivingStats stats) {
         return stats.getStat(StatTypes.AGILITY).getValue() / 10;
     }
 
@@ -129,9 +129,9 @@ public class DerivedStatsCalculator {
         public final int bonusDEF;
         public final int baseMDEF;
         public final int bonusMDEF;
-        public final int hit;
-        public final int baseFlee;
-        public final int bonusFlee;
+        public final int accuracy;
+        public final int baseEvasion;
+        public final int bonusEvasion;
         public final int crit;
         public final int aspd;
 
@@ -144,9 +144,9 @@ public class DerivedStatsCalculator {
             this.bonusDEF = calculateBonusDEF(stats);
             this.baseMDEF = calculateBaseMDEF(stats);
             this.bonusMDEF = calculateBonusMDEF(stats);
-            this.hit = calculateHIT(stats);
-            this.baseFlee = calculateBaseFLEE(stats);
-            this.bonusFlee = calculateBonusFLEE(stats);
+            this.accuracy = calculateAccuracy(stats);
+            this.baseEvasion = calculateBaseEvasion(stats);
+            this.bonusEvasion = calculateBonusEvasion(stats);
             this.crit = calculateCRIT(stats);
             this.aspd = calculateASPD(stats);
         }

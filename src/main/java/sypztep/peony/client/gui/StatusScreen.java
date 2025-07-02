@@ -96,8 +96,9 @@ public class StatusScreen extends Screen {
         drawSeparator(guiGraphics, yOffset);
         yOffset += SECTION_SPACING;
         
-        // Draw status points
-        drawStatusPoints(guiGraphics, statsAttachment.getStatPoints(), yOffset);
+        // Draw status points in right column
+        int rightColumnX = windowX + WINDOW_WIDTH / 2 + PADDING;
+        drawStatusPoints(guiGraphics, statsAttachment.getStatPoints(), rightColumnX, yOffset);
         
         // Render widgets (close button)
         super.render(guiGraphics, mouseX, mouseY, partialTick);
@@ -136,7 +137,7 @@ public class StatusScreen extends Screen {
         
         for (StatTypes statType : StatTypes.values()) {
             int currentValue = stats.getStat(statType).getValue();
-            int nextValue = currentValue + 1;
+            int statPointCost = stats.getLevelSystem().getGainStatPointsForLevel(currentValue);
             
             // Stat name (using aka field - Str, Agi, etc.)
             String statName = statType.getAka().toUpperCase();
@@ -147,15 +148,15 @@ public class StatusScreen extends Screen {
             int currentX = windowX + 60;
             guiGraphics.drawString(this.font, currentStr, currentX, currentY, VALUE_COLOR);
             
-            // Arrow
-            String arrow = ">";
-            int arrowX = windowX + 140;
+            // Triangle arrow
+            String arrow = "▷";
+            int arrowX = windowX + 100;
             guiGraphics.drawString(this.font, arrow, arrowX, currentY, ARROW_COLOR);
             
-            // Next value
-            String nextStr = String.valueOf(nextValue);
-            int nextX = windowX + 160;
-            guiGraphics.drawString(this.font, nextStr, nextX, currentY, VALUE_COLOR);
+            // Stat point cost
+            String costStr = String.valueOf(statPointCost);
+            int costX = windowX + 120;
+            guiGraphics.drawString(this.font, costStr, costX, currentY, VALUE_COLOR);
             
             currentY += LINE_HEIGHT;
         }
@@ -169,66 +170,55 @@ public class StatusScreen extends Screen {
     
     private int drawDerivedStats(GuiGraphics guiGraphics, DerivedStatsCalculator.DerivedStats derivedStats, int startY) {
         int currentY = startY;
+        int leftColumnX = windowX + PADDING;
+        int rightColumnX = windowX + WINDOW_WIDTH / 2 + PADDING;
         
-        // ATK
-        drawDerivedStat(guiGraphics, "ATK", derivedStats.baseATK, derivedStats.bonusATK, currentY);
+        // Row 1: ATK and DEF
+        drawDerivedStat(guiGraphics, "Atk", derivedStats.baseATK, derivedStats.bonusATK, leftColumnX, currentY);
+        drawDerivedStat(guiGraphics, "Def", derivedStats.baseDEF, derivedStats.bonusDEF, rightColumnX, currentY);
         currentY += LINE_HEIGHT;
         
-        // MATK
-        drawDerivedStat(guiGraphics, "MATK", derivedStats.baseMATK, derivedStats.bonusMATK, currentY);
+        // Row 2: MATK and MDEF
+        drawDerivedStat(guiGraphics, "Matk", derivedStats.baseMATK, derivedStats.bonusMATK, leftColumnX, currentY);
+        drawDerivedStat(guiGraphics, "Mdef", derivedStats.baseMDEF, derivedStats.bonusMDEF, rightColumnX, currentY);
         currentY += LINE_HEIGHT;
         
-        // DEF
-        drawDerivedStat(guiGraphics, "DEF", derivedStats.baseDEF, derivedStats.bonusDEF, currentY);
+        // Row 3: Accuracy and Evasion
+        drawSingleStat(guiGraphics, "Accuracy", derivedStats.accuracy, leftColumnX, currentY);
+        drawDerivedStat(guiGraphics, "Evasion", derivedStats.baseEvasion, derivedStats.bonusEvasion, rightColumnX, currentY);
         currentY += LINE_HEIGHT;
         
-        // MDEF
-        drawDerivedStat(guiGraphics, "MDEF", derivedStats.baseMDEF, derivedStats.bonusMDEF, currentY);
-        currentY += LINE_HEIGHT;
-        
-        // HIT (single value)
-        drawSingleStat(guiGraphics, "HIT", derivedStats.hit, currentY);
-        currentY += LINE_HEIGHT;
-        
-        // FLEE
-        drawDerivedStat(guiGraphics, "FLEE", derivedStats.baseFlee, derivedStats.bonusFlee, currentY);
-        currentY += LINE_HEIGHT;
-        
-        // CRIT (single value)
-        drawSingleStat(guiGraphics, "CRIT", derivedStats.crit, currentY);
-        currentY += LINE_HEIGHT;
-        
-        // ASPD (single value)
-        drawSingleStat(guiGraphics, "ASPD", derivedStats.aspd, currentY);
+        // Row 4: Critical and Aspd
+        drawSingleStat(guiGraphics, "Critical", derivedStats.crit, leftColumnX, currentY);
+        drawSingleStat(guiGraphics, "Aspd", derivedStats.aspd, rightColumnX, currentY);
         currentY += LINE_HEIGHT;
         
         return currentY;
     }
     
-    private void drawDerivedStat(GuiGraphics guiGraphics, String name, int baseValue, int bonusValue, int y) {
+    private void drawDerivedStat(GuiGraphics guiGraphics, String name, int baseValue, int bonusValue, int x, int y) {
         // Stat name
-        guiGraphics.drawString(this.font, name, windowX + PADDING, y, TEXT_COLOR);
+        guiGraphics.drawString(this.font, name, x, y, TEXT_COLOR);
         
         // Value in "base + bonus" format
         String valueStr = baseValue + " + " + bonusValue;
-        int valueX = windowX + 80;
+        int valueX = x + 50;
         guiGraphics.drawString(this.font, valueStr, valueX, y, VALUE_COLOR);
     }
     
-    private void drawSingleStat(GuiGraphics guiGraphics, String name, int value, int y) {
+    private void drawSingleStat(GuiGraphics guiGraphics, String name, int value, int x, int y) {
         // Stat name
-        guiGraphics.drawString(this.font, name, windowX + PADDING, y, TEXT_COLOR);
+        guiGraphics.drawString(this.font, name, x, y, TEXT_COLOR);
         
         // Value
         String valueStr = String.valueOf(value);
-        int valueX = windowX + 80;
+        int valueX = x + 50;
         guiGraphics.drawString(this.font, valueStr, valueX, y, VALUE_COLOR);
     }
     
-    private void drawStatusPoints(GuiGraphics guiGraphics, int statPoints, int y) {
-        String text = "STATUS POINTS  " + statPoints;
-        int textX = windowX + PADDING;
-        guiGraphics.drawString(this.font, text, textX, y, STAT_POINTS_COLOR);
+    private void drawStatusPoints(GuiGraphics guiGraphics, int statPoints, int x, int y) {
+        String text = "Status Point       " + statPoints;
+        guiGraphics.drawString(this.font, text, x, y, STAT_POINTS_COLOR);
     }
     
     @Override
